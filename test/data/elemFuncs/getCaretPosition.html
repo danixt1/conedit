@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - GetCursorPosition</title>
+</head>
+<body>
+    <div contenteditable="true" id="elem">lorem <b>it dor<b> as <i>fasge</i> <span>fa <b id="elemMark">TESTE</b> Lorem</span></div>
+    <script>
+
+        var range = document.createRange()
+        var sel = window.getSelection()
+        range.setStart(document.getElementById("elemMark").childNodes[0], 2);
+        range.collapse(true)
+        sel.removeAllRanges();
+        sel.addRange(range);
+        console.log("END");
+    </script>
+    <table>
+        <tr>
+            <td>expected Length:</td>
+            <td>total length:</td>
+            <td>Selected Elem:</td>
+            <td>Local Position:</td>
+        </tr>
+        <tr>
+            <td>27</td>
+            <td>36</td>
+            <td>elemMark</td>
+            <td>2</td>
+        </tr>
+    </table>
+</body>
+</html>

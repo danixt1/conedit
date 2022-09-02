@@ -1,0 +1,19 @@
+{
+    "name": "conedit",
+    "main": "builds/src",
+    "type": "commonjs",
+    "types": "src/index",
+    "scripts": {
+        "test": "mocha -t 50000"
+    },
+    "devDependencies": {
+        "@rollup/plugin-commonjs": "^22.0.2",
+        "@rollup/plugin-replace": "^4.0.0",
+        "@rollup/plugin-typescript": "^8.3.4",
+        "mocha": "^10.0.0",
+        "puppeteer": "^16.2.0",
+        "rollup": "^2.78.1",
+        "tslib": "^2.4.0",
+        "typescript": "^4.7.4"
+    }
+}

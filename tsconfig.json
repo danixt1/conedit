@@ -1,0 +1,13 @@
+{
+    "watchOptions": {
+        "excludeDirectories": ["builds","test"],
+        "watchDirectory": "useFsEvents",
+        "watchFile": "useFsEvents",
+    },
+    "compilerOptions": {
+        "module": "CommonJS",
+        "target": "ES2017",
+        "outDir": "lib"
+    },
+    "include": ["src"]
+}
