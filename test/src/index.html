@@ -1,30 +1,21 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test</title>
+    <title>Test Page</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <p class="warn" role="no-auto">Warning the script from source are injected with npm test or use the <i>getCodeIIFE.js</i> to generate file and put in the html </p>
-    <div id="testInput">
-        <label for="testName">Attached Script Name:</label>
-        <input type="text" id="testName">
-    
-        <label for="scriptToTest">Test:</label>
-        <input type="text" id="scriptToTest">
-    
-        <label for="execfuncs">Functions To Execute:</label>
-        <input type="text" id="execfuncs" value="*">
-        <input type="text" hidden id="delay">
-        <button id="execTest">Start</button>
-    </div>
-    <div>
-        <h2>Executing test from: <span id="execTestName">LoremImpsum.js</span></h2>
-        <p><span id="completedTests"></span> tests from <span id="testToExecute"></span></p>
-    </div>
+    <h1>Test Workbanch</h1>
+    <h3>Content Editable:</h3>
+    <div contenteditable="true" id="elem"></div>
+    <details id="exec-details">
+        <summary>Execution Details</summary>
+        <h3>Show detailed information about execution order</h3>
+        <div id="zones"></div>
+    </details>
 </body>
-<script src="tests.js"></script>
+<script src="script.js"></script>
 </html>

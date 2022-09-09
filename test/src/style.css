@@ -1,12 +1,44 @@
-html{
-    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif
+#elem{
+    min-height: 40px;
+    font-size: large;
+    background-color: rgb(209, 209, 209);
+    padding: 8px;
+    transition: 0.5s;
 }
-.warn{
-    color:goldenrod
+#elem *{
+    transition:all 0.5s;
 }
-.passed{
-    color:green
+
+.green{
+    background-color: rgb(4, 185, 4) !important;
+    transition: 0.5s;
 }
-.failed{
-    color: red;
+.yellow{
+    background-color:  yellow !important;
+    transition: 0.5s;
+}
+.red{
+    background-color: red !important;
+    transition: 0.5s;
+}
+
+#exec-details{
+    margin-top: 10px;
+    transition: 0.5s;
+    border: 2px solid black;
+    max-height: 400px;
+}
+#exec-details summary{
+    transition: 0.5s;
+    cursor: pointer;
+    font-size: medium;
+    padding: 5px;
+}
+#exec-details:hover summary{
+    padding-left: 8px !important;
+}
+#exec-details[open] summary{
+    background-color: rgb(184, 184, 255);
+    padding-left: 8px !important;
+    border-bottom: 2px solid black;
 }

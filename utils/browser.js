@@ -5,7 +5,7 @@ async function startBrowser(headless = false){
     var config = {
         headless:false,
         slowMo: 500,
-        devtools:true
+        devtools:false
     }
     if(headless)
         config = {};

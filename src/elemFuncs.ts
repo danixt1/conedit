@@ -263,7 +263,7 @@ function replace(elem:Node, searchValue:Node | string | RegExp,replaceValue:stri
         });
     }
 }
-function NodeTextSearch(){
+function nodeTextSearch(){
     var nodes:Node[] = [];
     var nodeEnd:number[] = [];
     var fullText = "";
@@ -279,12 +279,12 @@ function NodeTextSearch(){
             return fullText.search(searchFor);
         },
         location(searchFor:string | RegExp){
-            var startPos = fullText.search(searchFor);
+            var startPos =typeof searchFor == "string"? fullText.indexOf(searchFor) : fullText.search(searchFor);
             if(startPos === -1)
                 return false;
-            var endPos = typeof searchFor === "string" ? searchFor.length : fullText.match(searchFor)[0].length;
+            var lengthMatchedText = typeof searchFor === "string" ? searchFor.length : fullText.match(searchFor)[0].length;
             var start = position(startPos);
-            var end = position(endPos);
+            var end = position(startPos+ lengthMatchedText);
             runPosition(start);
             runPosition(end);
             var sendElems:Node[] = [];
@@ -307,7 +307,7 @@ function NodeTextSearch(){
             function runPosition(pos){
                 for(var cont = 0; nodeEnd.length > cont;cont++){
                     const actualLength = nodeEnd[cont];
-                    if(startPos > pos.startIn){
+                    if(actualLength > pos.startIn){
                         pos.index = cont;
                         pos.node = nodes[cont];
                         const lastValue = cont != 0 ? nodeEnd[cont-1] : 0;
@@ -331,17 +331,17 @@ function setSelection(child:Node,loc:number){
     sel.addRange(range);
 }
 export {
-    getDataFromPosition,
-    splitElem,
     getCaretPosition,
     getEndChild,
     getStartChild,
+    replace,
+    splitElem,
+    getDataFromPosition,
     moveInEveryNode,
     setCaretToEnd,
     getLocalPath,
     setCaret,
     buildElemPath,
     getLocalPosition,
-    replace,
-    NodeTextSearch
+    nodeTextSearch
 }

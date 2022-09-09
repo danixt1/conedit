@@ -1,1 +1,0 @@
-console.debug("$END$"+test.getCaretPosition(document.getElementById("elem")));
