@@ -21,6 +21,7 @@ class makeTest{
     async start(){
         var page =this.#page;
         await page.waitForSelector("#"+this.#contentId);
+        //Put the text from the append function in indicated id
         await page.evaluate((innerHtml,id)=>{
             var elem = document.getElementById(id);
             elem.innerHTML = innerHtml;

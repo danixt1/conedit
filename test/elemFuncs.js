@@ -3,6 +3,8 @@ const HTML_START_END_CHILD = '<span id="first">first node</span> <b>seconde node
 
 const assert = require("assert");
 var testConfig = require("../utils/test_configure");
+var {createStringFunc} = require("conedit/utils/test_tools");
+
 /**@type {typeof import("../utils/MakeTest")} */
 var testObj;
 
@@ -91,44 +93,109 @@ var tests = {
     },
     nodeTextSearch(){
         //nodeTextSearch is used by replace function to complex search and replacement
-        it("get initial node and final node from matched text",async ()=>{
+        
+        function addNodesFactory(nodes,textSearch){
+            return function addNodes(...names){
+                for(var name of names){
+                    const BAR_POS = name.indexOf("/");
+                    var childPos =0;
+                    if(BAR_POS > -1){
+                        childPos = Number.parseInt(name.substring(BAR_POS+1));
+                        name = name.substring(0,BAR_POS);
+                    };
+                    const elem = document.getElementById(name);
+                    if(!elem){
+                        throw "CONTEXT BROWSER TEXT FAILED: Elem with id "+name+ " not exist";
+                    }
+                    const node = elem.childNodes[childPos];
+                    if(!node){
+                        throw "CONTEXT BROWSER TEXT FAILED: Elem with id "+name+ " not have child "+childPos;
+                    };
+                    nodes.push(node);
+                    textSearch.add(node);
+                }
+            }
+        }
+        const FUNC_ARRAY_ADD_NODES = createStringFunc(addNodesFactory,"nodes","textSearch");
+        it("get initial node and final node from text",async ()=>{
             const ELEMS_TO_SEARCH = 'not the node <span id="node0">starting here <span id="node1">ending here</span></span>';
             const SEARCH_TEXT = "starting here ending here";
             var page = new testObj("elem");
             page.append(ELEMS_TO_SEARCH);
-            page.testFunc((SEARCH_TEXT)=>{
-                //Get Nodes to put in test
-                const firstNode = document.getElementById("elem").childNodes[0];
-                const startNode = document.getElementById("node0").childNodes[0];
-                const endNode = document.getElementById("node1").childNodes[0];
-
-                //add nodes to textSearch
+            page.testFunc((SEARCH_TEXT,addNodes)=>{
                 var textSearch = test.nodeTextSearch();
-                textSearch.add(firstNode);
-                textSearch.add(startNode);
-                textSearch.add(endNode);
-
+                var nodes = [];
+                var addNodes = new Function(...addNodes)(nodes,textSearch);
+                addNodes("elem","node0","node1");
                 var obj = textSearch.location(SEARCH_TEXT);
-
-                //Check if propertys is equal to expected
-                const CHECK_START = obj.start.node == startNode;
-                const CHECK_END = obj.end.node == endNode;
-                const CHECK_ELEMS = obj.elems.length ==0;//elems property don't include start and end elem just the middle elems
-                const CHECK_TEXT_EXIST = textSearch.search(SEARCH_TEXT) == 13;
                 return {
-                    start:CHECK_START,
-                    end:CHECK_END,
-                    elems:CHECK_ELEMS,
-                    exist:CHECK_TEXT_EXIST
+                    start:obj.start.node == nodes[1],
+                    end:obj.end.node == nodes[2]
                 }
-            },SEARCH_TEXT);
+            },SEARCH_TEXT,FUNC_ARRAY_ADD_NODES);
             var result = await page.start();
-            assert.equal(result,{
+
+            assert.strictEqual(JSON.stringify(result),JSON.stringify({
                 start:true,
-                end:true,
-                elems:true,
-                exist:true
-            });
+                end:true
+            }));
+        });
+        it("check if localPostion from start and end is valid to substring",async ()=>{
+            const PART0 = "fiRst ";
+            const PART1 = "eNd";
+            const ELEMS_TO_SEARCH = `${PART0}<b id="node1">${PART1}</b>`;
+            const SEARCH_TEXT = "Rst eN";
+            var page = new testObj("elem");
+            page.append(ELEMS_TO_SEARCH);
+            page.testFunc((SEARCH_TEXT,addNodes)=>{
+                var nodes = [];
+                var textSearch = test.nodeTextSearch();
+                var addNodes = new Function(...addNodes)(nodes,textSearch);
+                addNodes("elem","node1");
+                var loc = textSearch.location(SEARCH_TEXT);
+                return {
+                    index_start:loc.start.localPos,
+                    index_end:loc.end.localPos
+                };
+            },SEARCH_TEXT,FUNC_ARRAY_ADD_NODES);
+            var result = await page.start();
+            const startSub = result.index_start;
+            const endSub = result.index_end + PART0.length;
+            assert.equal(SEARCH_TEXT, (PART0 + PART1).substring(startSub,endSub));
+        });
+        it("check if initial node and final node from regex",async ()=>{
+            var page = new testObj("elem");
+            var ids = [];
+            var pre = ["512 12","GET_THIS"];
+            const PRE_LENGTH = pre.reduce((p,c)=>p.length+c.length);
+            const{elem:ELEMS_TO_SEARCH,text:ORIGINAL_TEXT }= gen(...pre,"_PART"," 241");
+            const REGEX_INPUT = /([A-Z]+_*)+/;
+            const EXPECTED = ORIGINAL_TEXT.match(REGEX_INPUT)[0];
+            page.append(ELEMS_TO_SEARCH);
+            page.testFunc((REGEX_INPUT,addNodes,ids)=>{
+                var nodes = [];
+                var textSearch = test.nodeTextSearch();
+                REGEX_INPUT =new RegExp(REGEX_INPUT.replace(/\//g,""));
+                addNodes = new Function(...addNodes)(nodes,textSearch);
+                addNodes(...ids);
+                var pos =textSearch.location(REGEX_INPUT);
+                return {
+                    index_start:pos.start.localPos,
+                    index_end:pos.end.localPos
+                }
+            },REGEX_INPUT.toString(),FUNC_ARRAY_ADD_NODES,ids);
+            var result =await page.start();
+            assert.strictEqual(ORIGINAL_TEXT.substring(pre[0].length + result.index_start,PRE_LENGTH + result.index_end),EXPECTED);
+            function gen(...parts){
+                var final = "";
+                var originalText = "";
+                for(const part of parts){
+                    ids.push('part'+ids.length);
+                    final+=`<span id=${ids[ids.length-1]}>${part}</span>`;
+                    originalText+=part;
+                };
+                return {elem:final,text:originalText};
+            }
         });
     },
     replace(){

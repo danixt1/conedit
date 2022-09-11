@@ -4,7 +4,7 @@
     "type": "commonjs",
     "types": "src/index",
     "scripts": {
-        "test": "mocha -t 50000"
+        "test": "mocha -t 500000"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^22.0.2",

@@ -4,6 +4,7 @@ var MakeTest = require("./MakeTest");
 const path = require("path");
 /**@type {import("puppeteer").Page} */
 var page;
+var head = null;
 const pageDir =function(){
     var basicDir = __dirname.split(path.sep);
     basicDir.pop();
@@ -16,7 +17,7 @@ module.exports = {
         await page.reload({waitUntil:"networkidle2"});
         await page.addScriptTag({content:script});
         class ContextTest extends MakeTest{
-            constructor(id,testName){
+            constructor(id){
                 super(id,page);
             }
         }
@@ -30,6 +31,7 @@ module.exports = {
     }
 }
 async function start(headless = false){
+    head = headless;
     if(browser)
         return;
     browser = await browserGetter(headless);

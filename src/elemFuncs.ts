@@ -285,8 +285,8 @@ function nodeTextSearch(){
             var lengthMatchedText = typeof searchFor === "string" ? searchFor.length : fullText.match(searchFor)[0].length;
             var start = position(startPos);
             var end = position(startPos+ lengthMatchedText);
-            runPosition(start);
-            runPosition(end);
+            runPosition(start,compareMode(">"));
+            runPosition(end,compareMode(">="));//fix getting last position
             var sendElems:Node[] = [];
             for(var index = start.index + 1; index <= end.index -1;index++){
                 sendElems.push(nodes[index]);
@@ -304,15 +304,28 @@ function nodeTextSearch(){
                     index:-1
                 }
             }
-            function runPosition(pos){
+            function runPosition(pos:{node:Node,localPos:number,startIn:number,index:number},evaluator:(a:number,b:number)=>boolean){
                 for(var cont = 0; nodeEnd.length > cont;cont++){
                     const actualLength = nodeEnd[cont];
-                    if(actualLength > pos.startIn){
+                    if(evaluator(actualLength,pos.startIn)){
                         pos.index = cont;
                         pos.node = nodes[cont];
                         const lastValue = cont != 0 ? nodeEnd[cont-1] : 0;
-                        pos.localPos = actualLength - lastValue;
+                        const length = actualLength - lastValue;
+                        pos.localPos =length - (actualLength - pos.startIn);
                         break;
+                    }
+                }
+            }
+            function compareMode(mode = ">"){
+                if(mode == ">"){
+                    return (a,b)=>{
+                        return a > b;
+                    }
+                };
+                if(mode == ">="){
+                    return (a,b)=>{
+                        return a >=b;
                     }
                 }
             }
