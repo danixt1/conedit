@@ -229,8 +229,7 @@ function setCaret(elem:Node,pos:number) {
         return next;
     }
 }
-//TODO make system to replace various nodes case matched text is in diferent locations
-function replace(elem:Node, searchValue:Node | string | RegExp,replaceValue:string | Node,ops?){
+function replace(elem:Node, searchValue:string | RegExp,replaceValue:string | Node,ops?){
     if(typeof searchValue === "string" || searchValue instanceof RegExp)
         textReplacing(searchValue);
     function textReplacing(text:string | RegExp){
@@ -248,7 +247,8 @@ function replace(elem:Node, searchValue:Node | string | RegExp,replaceValue:stri
                 nodes.push(actualNode);
                 var isInFragment = actualText.search(text) != -1;
                 var isInFullText = fullText.search(text) != -1;
-                if(isInFragment && (!isInFullText || fullText === actualText)){
+                var isInActualNode = isInFragment && (!isInFullText || fullText === actualText);
+                if(isInActualNode){
                     var replaceText =typeof text === "string" ? text : actualText.match(text)[0];
                     if(typeof replaceValue === "string")
                         actualNode.textContent = actualText.replace(replaceText,replaceValue);
@@ -258,9 +258,36 @@ function replace(elem:Node, searchValue:Node | string | RegExp,replaceValue:stri
                         parent.removeChild(actualNode);
                     };
                     return false;
-                };
+                }else{
+                    if(isInFullText){
+                        var multiNodeSearch = nodeTextSearch();
+                        for(const node of nodes){
+                            multiNodeSearch.add(node);
+                        };
+                        var result = multiNodeSearch.location(text);
+                        if(!result){
+                            return false;
+                        }
+                        var startNode = result.start.node;
+                        var endNode = result.end.node;
+                        for(const elem of result.elems){
+                            elem.parentElement.removeChild(elem);
+                        };
+                        startNode.textContent = startNode.textContent.substring(0,result.start.localPos);
+                        endNode.textContent = endNode.textContent.substring(result.end.localPos);
+                        put(startNode,replaceValue);
+                        return false;
+                    }
+                }
             };
         });
+    }
+    function put(nodeToPut:Node,putIt:Node | string){
+        if(typeof putIt == "string"){
+            nodeToPut.textContent += putIt;
+        }else{
+            nodeToPut.parentElement.insertBefore(putIt,nodeToPut.nextSibling);
+        }
     }
 }
 function nodeTextSearch(){

@@ -239,6 +239,10 @@ var tests = {
             var result = await page.start();
             assert.equal(result,EXPECTED);
         })
+    },
+    //TODO
+    moveInEveryNode(){
+
     }
 }
 
@@ -248,8 +252,9 @@ after(async ()=>{
     await testConfig.end();
 })
 function exec(){
+    createTest(tests.replace);
     for(const [testName,test] of Object.entries(tests)){
-        createTest(test);
+        //createTest(test);
     }
 }
 function createTest(func){
