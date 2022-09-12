@@ -4,9 +4,11 @@ const HTML_START_END_CHILD = '<span id="first">first node</span> <b>seconde node
 const assert = require("assert");
 var testConfig = require("../utils/test_configure");
 var {createStringFunc} = require("conedit/utils/test_tools");
-
 /**@type {typeof import("../utils/MakeTest")} */
 var testObj;
+
+/**@type {import("../utils/MakeTest")} */
+var page;
 
 
 before(async function(){
@@ -28,10 +30,12 @@ before(async function(){
     //Get Test Object, Allow to send one time the original file
     testObj =await testConfig.getContext("elemFuncs.js",injectCode)
 });
+beforeEach(()=>{
+    page = new testObj("elem");
+})
 var tests = {
     getCaretPosition(){
         it("get correct position from cursor",async ()=>{
-            var page = new testObj("elem");
             page.append("lorem <b>it dor<b> as <i>fasge</i> <span>fa <b id=\"elemMark\">TESTE</b> Lorem</span>");
             page.testFunc(()=>{
                 var range = document.createRange()
@@ -49,7 +53,6 @@ var tests = {
     },
     setCaretPosition(){
         it("set cursor in position",async ()=>{
-            var page = new testObj("elem");
             page.append("it the <b>text <i id=\"mark\">to</i> set</b> the position");
             page.testFunc(()=>{
                 test.setCaret(document.getElementById("elem"),13);
@@ -71,7 +74,6 @@ var tests = {
     },
     getStartChild(){
         it("get the first node in text",async ()=>{
-            var page = new testObj("elem");
             page.append(HTML_START_END_CHILD);
             page.testFunc(()=>{
                 var firstChild = test.getStartChild(document.getElementById("elem"));
@@ -82,7 +84,6 @@ var tests = {
     },
     getEndChild(){
         it("get the last node in texts",async ()=>{
-            var page = new testObj("elem");
             page.append(HTML_START_END_CHILD);
             page.testFunc(()=>{
                 var endChild = test.getEndChild(document.getElementById("elem"));
@@ -120,7 +121,6 @@ var tests = {
         it("get initial node and final node from text",async ()=>{
             const ELEMS_TO_SEARCH = 'not the node <span id="node0">starting here <span id="node1">ending here</span></span>';
             const SEARCH_TEXT = "starting here ending here";
-            var page = new testObj("elem");
             page.append(ELEMS_TO_SEARCH);
             page.testFunc((SEARCH_TEXT,addNodes)=>{
                 var textSearch = test.nodeTextSearch();
@@ -145,7 +145,6 @@ var tests = {
             const PART1 = "eNd";
             const ELEMS_TO_SEARCH = `${PART0}<b id="node1">${PART1}</b>`;
             const SEARCH_TEXT = "Rst eN";
-            var page = new testObj("elem");
             page.append(ELEMS_TO_SEARCH);
             page.testFunc((SEARCH_TEXT,addNodes)=>{
                 var nodes = [];
@@ -240,9 +239,37 @@ var tests = {
             assert.equal(result,EXPECTED);
         })
     },
-    //TODO
     moveInEveryNode(){
-
+        var textArr = ["Test if"," the order"," moved is valid ","to text"];
+        const ELEMS_TO_SEARCH = `${textArr[0]}<span>${textArr[1]}</span>${textArr[2]}<b>${textArr[3]}</b>`;
+        it("Move in sequence (left to right)",async ()=>{
+            const EXPECTED = textArr.reduce((p,c)=>p+c);
+            //var page = new testObj("elem");
+            page.append(ELEMS_TO_SEARCH);
+            page.testFunc(()=>{
+                var actualText = "";
+                test.moveInEveryNode(document.getElementById("elem"),(node)=>{
+                    actualText+=node.textContent;
+                },"start");
+                return actualText
+            })
+            var result = await page.start();
+            assert.strictEqual(result,EXPECTED);
+        });
+        it("Move in sequecen (right ro left)",async ()=>{
+            const EXPECTED = textArr.reverse().reduce((p,c)=>p+c);
+            //svar page = new testObj("elem");
+            page.append(ELEMS_TO_SEARCH);
+            page.testFunc(()=>{
+                var actualText = "";
+                test.moveInEveryNode(document.getElementById("elem"),(node)=>{
+                    actualText+=node.textContent;
+                },"end");
+                return actualText;
+            });
+            var result = await page.start();
+            assert.strictEqual(result,EXPECTED);
+        });
     }
 }
 
@@ -252,9 +279,9 @@ after(async ()=>{
     await testConfig.end();
 })
 function exec(){
-    createTest(tests.replace);
+    
     for(const [testName,test] of Object.entries(tests)){
-        //createTest(test);
+        createTest(test);
     }
 }
 function createTest(func){
