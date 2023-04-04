@@ -1,6 +1,6 @@
 import {opendirSync,readFileSync,writeFileSync} from "fs";
 import {join} from "path"
-const RULE = /(?<![\w|'|"| ])import (.*) from ["|'](.+)["|']/g;
+const RULE = /(?<![\w|'|"| ])import (.*) from ["|'](\.\/[\w| |/]*)["|']/g;
 executeInDir("lib");
 function executeInDir(path){
     var dir = opendirSync(path);
