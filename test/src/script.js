@@ -4,7 +4,7 @@ function executeChangerWatcher(){
     var observer = new MutationObserver(putChangedClass);
     observer.observe(elem,{subtree:true,characterDataOldValue:true,childList:true})
 }
-//executeChangerWatcher();
+executeChangerWatcher();
 /**
  * @param {MutationRecord[]} data 
  */

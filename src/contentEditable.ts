@@ -97,6 +97,13 @@ class contentEditable{
     removeEventListener(type: keyof HTMLElementEventMap,listener:EventListenerOrEventListenerObject,options?:boolean | AddEventListenerOptions){
         this.content.removeEventListener(type,listener,options)
     }
+    exitPath(){
+        this.textPath = [];
+    }
+    exitPathSingle(){
+        this.path.pop();
+        this.textPath = this.path;
+    }
 };
 declare global{
     type ContentEditable =contentEditable
