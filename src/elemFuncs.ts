@@ -96,8 +96,8 @@ const getCaretPosition =function(){
             caretPos = range.endOffset;
             }
         };
+        //Skip the calcs, case nothing have changed and send last position from caret
         if(lastPosition === caretPos && lastNode === nodeFocused){
-            console.log("Skipping calculate....");
             return lastTruePosition;
         };
         lastPosition = caretPos;
@@ -116,15 +116,21 @@ const getCaretPosition =function(){
     }
     return get;
 }()
-function moveInEveryNode(elem:Node,callback:(node:Node)=>void | false,startIn:"start"|"end"="start"){
+/**
+ * take the deepest node in every element.
+ * @param elem The element to look.
+ * @param callback callback passed in the nodes pass `false` to stop the loop
+ * @param direction the direction to return the nodes
+ */
+function moveInEveryNode(elem:Node,callback:(node:Node)=>void | false,direction:"start"|"end"="start"){
     var actualNode = elem;
     var lastPositions,plusSignal,logicalMode,startingPos;
-    if(startIn === "start"){
+    if(direction === "start"){
         plusSignal = 1;
         logicalMode = (actualPos,length) =>actualPos < length;
         startingPos = (length)=>-1;
         lastPositions = [-1];
-    }else if(startIn === "end"){
+    }else if(direction === "end"){
         plusSignal = -1;
         logicalMode = (actualPos,length) => actualPos >= 0;
         startingPos = (length)=>length;
@@ -161,9 +167,12 @@ function setCaretToEnd(elem:Node){
     var end = getEndChild(elem);
     setSelection(end,end.textContent.length);
 }
-function getEndChild(elem:Node){
+/**
+ * Get the absolute last node in the element
+ */
+function getEndChild(elem:Node):Node{
     return repeat(elem);
-    function repeat(elemToSearch){
+    function repeat(elemToSearch:Node){
         var childs = elemToSearch.childNodes;
         if(childs.length > 0){
             return repeat(childs[childs.length-1]);
@@ -172,6 +181,9 @@ function getEndChild(elem:Node){
         }
     }
 }
+/**
+ * Get the absolute first node in the element
+ */
 function getStartChild(elem:Node){
     var actualChild = elem;
     while(actualChild.childNodes.length >0){
@@ -179,6 +191,7 @@ function getStartChild(elem:Node){
     };
     return actualChild;
 }
+
 function getLocalPosition(ref:Node,data:DataPosition){
     var actualPosition = 0;
     moveInEveryNode(ref,e =>{
@@ -196,38 +209,27 @@ function getLocalPosition(ref:Node,data:DataPosition){
  */
 function setCaret(elem:Node,pos:number) {
     var el = elem;
-    var contLoc = 0;
-    var trueLoc = pos;
-    var child =contChilds(el);
-    setSelection(child,trueLoc);
-    function contChilds(elemToCont){
+    var actualLength = 0;
+    var relativePositionToElem = pos;
+    var relativeChildFromPosition =getChildInPosition(el);
+    setSelection(relativeChildFromPosition,relativePositionToElem);
+    function getChildInPosition(elemToCont){
         if(elemToCont.childNodes.length == 0){
             const textLength = elemToCont.textContent.length;
-            contLoc +=textLength;
-            if(trueLoc > textLength){
-                trueLoc -=textLength;
+            actualLength +=textLength;
+            if(relativePositionToElem > textLength){
+                relativePositionToElem -=textLength;
             }
         };
-        if(contLoc >= pos){
+        if(actualLength >= pos){
             return elemToCont;
         }
         for(const actualChild of elemToCont.childNodes){
-            var res =contChilds(actualChild);
+            var res =getChildInPosition(actualChild);
             if(res)
                 return res;
         }
     };
-    function getNextSibling(startIn){
-        var next = startIn.nextSibling;
-        if(!next){
-            if(startIn.parentElement != elem){
-                return getNextSibling(startIn.parentElement);
-            }else{
-                return null;
-            }
-        }
-        return next;
-    }
 }
 function replace(elem:Node, searchValue:string | RegExp,replaceValue:string | Node,ops?){
     if(typeof searchValue === "string" || searchValue instanceof RegExp)
@@ -290,21 +292,31 @@ function replace(elem:Node, searchValue:string | RegExp,replaceValue:string | No
         }
     }
 }
+/**
+ * System used to get the nodes with the passed text
+ */
 function nodeTextSearch(){
     var nodes:Node[] = [];
     var nodeEnd:number[] = [];
     var fullText = "";
     var totalLength = 0;
     return {
+        /**
+         * Add elements to by searched
+         */
         add(node:Node){
             totalLength += node.textContent.length;
             nodes.push(node);
             nodeEnd.push(totalLength);
             fullText+=node.textContent;
         },
+        /**search for text and return the position */
         search(searchFor:string | RegExp){
             return fullText.search(searchFor);
         },
+        /**
+         * Get detailed info from the search
+         */
         location(searchFor:string | RegExp){
             var startPos =typeof searchFor == "string"? fullText.indexOf(searchFor) : fullText.search(searchFor);
             if(startPos === -1)

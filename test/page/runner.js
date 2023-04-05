@@ -1,13 +1,15 @@
 import "/tests/elemFuncs.js";
-var data = mocha.run();
+import "/tests/contentEditable.js";
+var data ={data:mocha.run(),status:"ok"};
 var interval = setInterval(checkEnd,50);
 function checkEnd(){
-    if(data.state != "running"){
+    if(data.data.state != "running"){
+        data.data = getResult(data.data);
         $.ajax({
             dataType:"json",
             contentType: "application/json",
             url:"/info",
-            data:JSON.stringify(getResult(data)),
+            data:JSON.stringify(data),
             method:"POST"
         })
         clearInterval(interval);

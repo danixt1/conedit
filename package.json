@@ -4,14 +4,16 @@
     "type": "module",
     "types": "src/index",
     "scripts": {
-        "test": "mocha --delay -t 60000"
+        "test": "mocha --delay -t 60000",
+        "build": "tsc && node utils/rename.js"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^22.0.2",
         "@rollup/plugin-replace": "^4.0.0",
         "@rollup/plugin-typescript": "^8.3.4",
+        "chai": "^4.3.7",
         "express": "^4.18.2",
-        "mocha": "^10.0.0",
+        "mocha": "^10.2.0",
         "puppeteer": "^16.2.0",
         "rollup": "^2.78.1",
         "tslib": "^2.4.0",

@@ -5,7 +5,10 @@ var app = express();
 import puppeteer  from "puppeteer";
 import {join} from "path";
 import assert from "assert";
-
+import * as mocha from "mocha";
+import * as chai from "chai";
+/**@type {"default"|"waitSucess"} */
+var mode = "default";
 app.use(express.json());
 app.use(express.static(join("test","page")));
 app.use("/lib",express.static(join("lib")));
@@ -18,16 +21,34 @@ function start(end){
         if(type === "port" || type === "-p"){
             port = Number(value) || port;
         }
+        if(type === "--mode" || type === "-m"){
+            if(value.toLowerCase() === "waitsucess"){
+                mode = "waitSucess";
+            };
+        }
     });
-    console.log("starting test,port="+port);
+    console.log("[TEST] starting test,port="+port);
     app.post("/info",(req,res)=>{
         //req.body;
-        console.log("data passed from frontend,process finished");
+        console.log("[SERVER] Receiving data from frontend");
         var data = req.body;
         if(!data){
-            console.error("Invalid data returned");
+            console.error("[SERVER] Invalid data returned");
         }else{
-            makeSuite(data.suite);
+            var test_info =data.data;
+            if(data.status === "ok"){
+                const failures = test_info.stats.failures;
+                if(mode === "waitSucess" && failures != 0){
+                    console.log(`[SERVER] Have ${failures} failures, waiting for success`);
+                }else{
+                    makeSuite(test_info.suite);
+                    setImmediate(processFinish);
+                }
+            }else{
+                console.error(data.error);
+                if(mode != "waitSucess")
+                    setImmediate(processFinish);
+            }
         }
         function makeSuite(suite){
             if(suite.root){
@@ -54,12 +75,22 @@ function start(end){
             function makeTest(tests){
                 for(const test of tests){
                     it(test.title,function(){
-                        assert.ok(test.state == "passed",test.err?.message);
+                        if(test.state === "failed"){
+                            var message = test.err.message;
+                            delete test.err.name,test.err.message;
+                            var a = new chai.AssertionError(message,test.err);
+                            throw a
+                        }else{
+                            if(test.state === "pending"){
+                                this.skip();
+                            }else{
+                                assert.ok(test.state === "passed",test.err);
+                            }
+                        }
                     })
                 };
             }
         }
-        setImmediate(processFinish);
         res.status(200).end();
     })
     var server = app.listen(port);
@@ -67,16 +98,16 @@ function start(end){
     async function startBrowser(){
         const INDEX_URL = "http://localhost:"+port+"/index.html"
         var browser =await puppeteer.launch({headless:true});
-        console.log("browser started");
+        console.log("[HEADLESS BROWSER] browser started");
         const page = await browser.newPage();
         await page.setViewport({ width: 1024, height: 720 });
-        console.log("Opening " +INDEX_URL);
+        console.log("[HEADLESS BROWSER] Opening " +INDEX_URL);
         processFinish = ()=>{
             server.close();
             browser.close().then(end);
         }
         await page.goto(INDEX_URL);
-        console.log("opened, waiting server");
+        console.log("[HEADLESS BROWSER] opened, waiting server");
     }
 }
 start(()=>{run()});
