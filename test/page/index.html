@@ -5,14 +5,14 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Test Page</title>
-    <link rel="stylesheet" href="src/mocha.css">
+    <link rel="stylesheet" href="mocha/mocha.css">
     <script src="src/jquery.js"></script>
 </head>
 <body>
     <div contenteditable="true" id="content"></div>
     <div id="mocha"></div>
-    <script src="src/chai.js"></script>
-    <script src="src/mocha.js"></script>
+    <script src="chai/chai.js"></script>
+    <script src="mocha/mocha.js"></script>
     <script type="module">
         import {fail} from "./report.js"
         window.onerror = (event, source, lineno, colno, error)=>{

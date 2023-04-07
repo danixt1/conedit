@@ -7,24 +7,29 @@ import {join} from "path";
 import assert from "assert";
 import * as mocha from "mocha";
 import * as chai from "chai";
-/**@type {"default"|"waitSucess"} */
+/**@type {"default"|"waitSucess"|"view"} */
 var mode = "default";
 app.use(express.json());
 app.use(express.static(join("test","page")));
 app.use("/lib",express.static(join("lib")));
+app.use("/mocha",express.static(join("node_modules","mocha")));
+app.use("/chai",express.static(join("node_modules","chai")));
 
 function start(end){
     var processFinish = ()=>{throw "Function not overrided"};
     var port = 7000;
     process.argv.forEach(e =>{
         var [type,value] = e.split("=");
-        if(type === "port" || type === "-p"){
+        if(type === "--port" || type === "-p"){
             port = Number(value) || port;
         }
         if(type === "--mode" || type === "-m"){
             if(value.toLowerCase() === "waitsucess"){
                 mode = "waitSucess";
             };
+            if(value.toLowerCase() === "view"){
+                mode = "view";
+            }
         }
     });
     console.log("[TEST] starting test,port="+port);
@@ -97,7 +102,7 @@ function start(end){
     startBrowser();
     async function startBrowser(){
         const INDEX_URL = "http://localhost:"+port+"/index.html"
-        var browser =await puppeteer.launch({headless:true});
+        var browser =await puppeteer.launch({headless:mode != "view"});
         console.log("[HEADLESS BROWSER] browser started");
         const page = await browser.newPage();
         await page.setViewport({ width: 1024, height: 720 });
