@@ -1,23 +1,16 @@
 import {getCaretPosition,setCaret,setCaretToEnd,getDataFromPosition,splitElem,getLocalPath,getLocalPosition,replace} from "./elemFuncs";
-import {contentTag,markFormat} from "./tags";
-import * as events from "./contentListeners"
+//import {contentTag,markFormat} from "./tags";
+//import * as events from "./contentListeners"
 interface ContentEditableOps {
-    isFixedTextPath?:boolean
 };
 class contentEditable{
-    private content:HTMLElement;
-    private path:Element[] = [];
-    private ops:ContentEditableOps;
-    private eventPathChanger:events.PathChanger
+    private content:HTMLElement
+    private ops:ContentEditableOps
+
     constructor(content:HTMLElement,ops:ContentEditableOps = {}){
-        var pathChanger = new events.PathChanger(this);
-        this.eventPathChanger = pathChanger;
         if(!content.contentEditable)
             throw "Passed Element not is contentEditable";
-        this.content = this[contentTag] = content;
-        if(ops.isFixedTextPath){
-            pathChanger.add();
-        };
+        this.content = content;
         this.ops = ops;
     }
     append(...elems:Node[]){
@@ -56,33 +49,6 @@ class contentEditable{
     get caretPosition(){
         return getCaretPosition(this.content);
     }
-    get textPath(){
-        if(this.ops.isFixedTextPath){
-            return this.path
-        }
-        return getLocalPath(this.content,this.caretPosition)
-    }
-    set textPath(elems:Element[]){
-        if(this.ops.isFixedTextPath){
-            elems.forEach(elem =>{
-                elem[markFormat] = Symbol("Family Mark");
-            });
-            this.path = elems;
-            this.eventPathChanger.path = elems;
-
-        }
-    }
-    get isFixedTextPath(){
-        return this.ops.isFixedTextPath;
-    }
-    set isFixedTextPath(val:boolean){
-        this.ops.isFixedTextPath = val;
-        if(!val){
-            this.eventPathChanger.remove();
-        }else{
-            this.eventPathChanger.add();
-        }
-    }
     set caretPosition(position:number){
         setCaret(this.content,position);
     }
@@ -96,13 +62,6 @@ class contentEditable{
     }
     removeEventListener(type: keyof HTMLElementEventMap,listener:EventListenerOrEventListenerObject,options?:boolean | AddEventListenerOptions){
         this.content.removeEventListener(type,listener,options)
-    }
-    exitPath(){
-        this.textPath = [];
-    }
-    exitPathSingle(){
-        this.path.pop();
-        this.textPath = this.path;
     }
 };
 declare global{

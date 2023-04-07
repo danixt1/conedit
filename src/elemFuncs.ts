@@ -4,6 +4,9 @@ interface DataPosition{
     localPosition:number,
     index:number
 }
+/**
+ * Get informations from what is in the position
+ */
 function getDataFromPosition(elem:Node,position:number):DataPosition{
     var node:Node = null;
     var actualPos = 0;
@@ -58,9 +61,9 @@ function splitElem(elem:Node,pos:number){
         defOperation(elem2,"start",(el,textPos)=>el.textContent.substring(textPos))
     ]
 }
-function getLocalPath(elem:Element,hint:number | Element):Element[]{
-    var endElem:Element = typeof hint === "number" ? getElemFromPosition(hint) : hint;
-    var sequence:any = [endElem];
+function getLocalPath(elem:Element,from:number | Element):Element[]{
+    var endElem:Element = typeof from === "number" ? getElemFromPosition(from) : from;
+    var sequence:Element[] = [endElem];
     var actualElem = endElem.parentElement;
     while(actualElem != elem){
         sequence.push(actualElem);

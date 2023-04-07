@@ -1,10 +1,8 @@
-import commonJs from "@rollup/plugin-commonjs";
 export default[{
-    input:"builds/src/index.js",
+    input:"lib/index.js",
     output:{
-        file:"builds/self/iife.js",
+        file:"conedit.js",
         format:"iife",
-        name:"ContentEditable"
-    },
-    plugins:[commonJs()]
+        name:"conedit"
+    }
 }]
