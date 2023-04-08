@@ -4,7 +4,7 @@
     "type": "module",
     "types": "src/index",
     "scripts": {
-        "test": "mocha --delay -t 60000",
+        "test": "mocha --delay -t 60000 --file \"test/start.js\"",
         "build": "tsc && node utils/rename.js"
     },
     "devDependencies": {

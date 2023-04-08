@@ -11,10 +11,20 @@
 <body>
     <div contenteditable="true" id="content"></div>
     <div id="mocha"></div>
+    <button id="finish">finish</button>
     <script src="chai/chai.js"></script>
     <script src="mocha/mocha.js"></script>
     <script type="module">
         import {fail} from "./report.js"
+        $("#finish").on("click",()=>{
+            $.ajax({
+                dataType:"json",
+                contentType: "application/json",
+                url:"/finish",
+                method:"GET"
+            })
+            window.close();
+        })
         window.onerror = (event, source, lineno, colno, error)=>{
             fail(error);
         }
