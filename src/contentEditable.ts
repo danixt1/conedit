@@ -1,6 +1,5 @@
-import {getCaretPosition,setCaret,setCaretToEnd,getDataFromPosition,splitElem,getLocalPath,getLocalPosition,replace} from "./elemFuncs";
-//import {contentTag,markFormat} from "./tags";
-//import * as events from "./contentListeners"
+import {getCaretPosition,setCaret,setCaretToEnd,getDataFromPosition,splitElem,getLocalPath,getLocalPosition,replace} from "./elemFuncs.js"
+
 interface ContentEditableOps {
 };
 class contentEditable{
@@ -63,7 +62,7 @@ class contentEditable{
     removeEventListener(type: keyof HTMLElementEventMap,listener:EventListenerOrEventListenerObject,options?:boolean | AddEventListenerOptions){
         this.content.removeEventListener(type,listener,options)
     }
-};
+}
 declare global{
     type ContentEditable =contentEditable
 }

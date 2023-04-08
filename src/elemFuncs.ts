@@ -1,4 +1,4 @@
-import * as tags from "./tags"; 
+import * as tags from "./tags.js"; 
 interface DataPosition{
     node:Node,
     localPosition:number,
@@ -238,6 +238,7 @@ function replace(elem:Node, searchValue:string | RegExp,replaceValue:string | No
     if(typeof searchValue === "string" || searchValue instanceof RegExp)
         textReplacing(searchValue);
     function textReplacing(text:string | RegExp){
+        console.log("text in elem: "+text);
         const position = elem.textContent.search(text);
         var fullPosition:number = 0;
         var fullText:string = "";

@@ -1,7 +1,7 @@
 import {opendirSync,readFileSync,writeFileSync} from "fs";
 import {join} from "path"
 const RULE = /(?<![\w|'|"| ])import (.*) from ["|'](\.\/[\w| |/]*)["|']/g;
-executeInDir("lib");
+executeInDir("src");
 function executeInDir(path){
     var dir = opendirSync(path);
     var dirent;
@@ -10,7 +10,7 @@ function executeInDir(path){
         if(dirent.isDirectory()){
             executeInDir(ACTUAL_PATH);
         }else{
-            if(dirent.isFile() && dirent.name.endsWith(".js")){
+            if(dirent.isFile() && dirent.name.endsWith(".ts")){
                 var file = readFileSync(ACTUAL_PATH,{encoding:"utf-8"});
                 file = file.replace(RULE,'import $1 from "$2.js"');
                 writeFileSync(ACTUAL_PATH,file);
