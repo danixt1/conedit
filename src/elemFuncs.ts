@@ -4,6 +4,17 @@ interface DataPosition{
     localPosition:number,
     index:number
 }
+interface NodePosition{
+    node: Node
+    localPos: number
+    startIn: number
+    index: number
+}
+interface locationResults{
+    start: NodePosition;
+    end: NodePosition;
+    elems: Node[];
+}
 /**
  * Get informations from what is in the position
  */
@@ -235,10 +246,17 @@ function setCaret(elem:Node,pos:number) {
     };
 }
 function replace(elem:Node, searchValue:string | RegExp,replaceValue:string | Node,ops?){
-    if(typeof searchValue === "string" || searchValue instanceof RegExp)
-        textReplacing(searchValue);
+    var textSearch = nodeTextSearch();
+    var setVal = typeof replaceValue === "string" ?document.createTextNode(replaceValue) : replaceValue;
+    if(typeof searchValue === "string"){
+        moveInEveryNode(elem,actual =>{textSearch.add(actual)});
+        var result = textSearch.location(searchValue);
+        if(result){
+            clearAndSet(result,setVal);
+        }
+    }
     function textReplacing(text:string | RegExp){
-        console.log("text in elem: "+text);
+        console.log("text in elem: "+elem.textContent);
         const position = elem.textContent.search(text);
         var fullPosition:number = 0;
         var fullText:string = "";
@@ -288,6 +306,60 @@ function replace(elem:Node, searchValue:string | RegExp,replaceValue:string | No
             };
         });
     }
+    function clearAndSet(info:locationResults,insert:Node){
+        if(info.start.node === info.end.node){
+            opSameStartAndEnd();
+        }else{
+            rebuildStartAndEndNodes();
+        }
+        function opSameStartAndEnd(){
+            const node = info.start.node;
+            const TOT_LENGTH = node.textContent.length;
+            if(info.start.localPos === 0 && info.end.localPos === TOT_LENGTH){
+                replaceBefore(node);
+                removeNode(node);
+            }else{
+                rebuildStartAndEndNodes();
+            }
+        }
+        function rebuildStartAndEndNodes(){
+            var nodeBefore =splitBefore(info.start.node,info.start.localPos);
+            var nextNode =splitAfter(info.end.node,info.end.localPos);
+            if(nodeBefore){
+                info.start.node.parentElement.insertBefore(nodeBefore,info.start.node);
+            }
+            info.end.node.parentElement.insertBefore(nextNode,info.end.node);
+            replaceBefore(nextNode);
+            if(info.start.node != info.end.node){
+                removeNode(info.end.node);
+            };
+            for(const rmNode of info.elems){
+                removeNode(rmNode);
+            }
+            removeNode(info.start.node);
+        }
+        function splitAfter(node:Node,endLocalPositionReplace:number){
+            if(endLocalPositionReplace === 0){
+                return node.cloneNode();
+            }else{
+                var putInNewNode = node.textContent.substring(endLocalPositionReplace);
+                return document.createTextNode(putInNewNode);
+            }
+        }
+        function splitBefore(node:Node,startLocalPositionReplace:number){
+            if(startLocalPositionReplace === 0){
+                return null;
+            };
+            var text = node.textContent;
+            return document.createTextNode(text.substring(0,startLocalPositionReplace));
+        }
+        function replaceBefore(node:Node){
+            node.parentElement.insertBefore(insert,node);
+        }
+        function removeNode(node:Node){
+            node.parentElement.removeChild(node);
+        };
+    }
     function put(nodeToPut:Node,putIt:Node | string){
         if(typeof putIt == "string"){
             nodeToPut.textContent += putIt;
@@ -321,13 +393,13 @@ function nodeTextSearch(){
         /**
          * Get detailed info from the search
          */
-        location(searchFor:string | RegExp){
+        location(searchFor:string | RegExp):locationResults | null{
             var startPos =typeof searchFor == "string"? fullText.indexOf(searchFor) : fullText.search(searchFor);
             if(startPos === -1)
-                return false;
+                return null;
             var lengthMatchedText = typeof searchFor === "string" ? searchFor.length : fullText.match(searchFor)[0].length;
-            var start = position(startPos);
-            var end = position(startPos+ lengthMatchedText);
+            var start:NodePosition = position(startPos);
+            var end:NodePosition = position(startPos+ lengthMatchedText);
             runPosition(start,compareMode(">"));
             runPosition(end,compareMode(">="));//fix getting last position
             var sendElems:Node[] = [];
