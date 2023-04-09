@@ -255,57 +255,6 @@ function replace(elem:Node, searchValue:string | RegExp,replaceValue:string | No
             clearAndSet(result,setVal);
         }
     }
-    function textReplacing(text:string | RegExp){
-        console.log("text in elem: "+elem.textContent);
-        const position = elem.textContent.search(text);
-        var fullPosition:number = 0;
-        var fullText:string = "";
-        var nodes:Node[] = [];
-        if(position == -1)
-            return;
-        moveInEveryNode(elem,actualNode =>{
-            var actualText = actualNode.textContent;
-            fullPosition+=actualText.length;
-            if(fullPosition >= position){
-                fullText+=actualText;
-                nodes.push(actualNode);
-                var isInFragment = actualText.search(text) != -1;
-                var isInFullText = fullText.search(text) != -1;
-                var isInActualNode = isInFragment && (!isInFullText || fullText === actualText);
-                if(isInActualNode){
-                    var replaceText =typeof text === "string" ? text : actualText.match(text)[0];
-                    if(typeof replaceValue === "string")
-                        actualNode.textContent = actualText.replace(replaceText,replaceValue);
-                    else{
-                        var parent =actualNode.parentNode;
-                        parent.insertBefore(replaceValue,actualNode);
-                        parent.removeChild(actualNode);
-                    };
-                    return false;
-                }else{
-                    if(isInFullText){
-                        var multiNodeSearch = nodeTextSearch();
-                        for(const node of nodes){
-                            multiNodeSearch.add(node);
-                        };
-                        var result = multiNodeSearch.location(text);
-                        if(!result){
-                            return false;
-                        }
-                        var startNode = result.start.node;
-                        var endNode = result.end.node;
-                        for(const elem of result.elems){
-                            elem.parentElement.removeChild(elem);
-                        };
-                        startNode.textContent = startNode.textContent.substring(0,result.start.localPos);
-                        endNode.textContent = endNode.textContent.substring(result.end.localPos);
-                        put(startNode,replaceValue);
-                        return false;
-                    }
-                }
-            };
-        });
-    }
     function clearAndSet(info:locationResults,insert:Node){
         if(info.start.node === info.end.node){
             opSameStartAndEnd();
