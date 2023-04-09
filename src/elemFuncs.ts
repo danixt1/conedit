@@ -248,18 +248,48 @@ function setCaret(elem:Node,pos:number) {
 function replace(elem:Node, searchValue:string | RegExp,replaceValue:string | Node,ops?){
     var textSearch = nodeTextSearch();
     var setVal = typeof replaceValue === "string" ?document.createTextNode(replaceValue) : replaceValue;
-    if(typeof searchValue === "string"){
+    var isGlobal = typeof searchValue === "object" ? searchValue.global : false;
+    if(!isGlobal){
         moveInEveryNode(elem,actual =>{textSearch.add(actual)});
         var result = textSearch.location(searchValue);
         if(result){
             clearAndSet(result,setVal);
         }
+    }else{
+        var regex =<RegExp>searchValue;
+        var actualPosition = 0;
+        var allNodes:Node[] = [];
+        moveInEveryNode(elem,actual =>{allNodes.push(actual)});
+        while(actualPosition <= allNodes.length){
+            const nodeFromThisPos = allNodes[actualPosition];
+            var info = textSearch.location(regex);
+            if(!info){
+                if(!nodeFromThisPos){
+                    break;
+                }
+                actualPosition++;
+                textSearch.add(nodeFromThisPos);
+            }else{
+                //keeps adding nodes to make sure the regex is found completely
+                if(info.end.node === allNodes[actualPosition - 1] && nodeFromThisPos){
+                    actualPosition ++;
+                    textSearch.add(nodeFromThisPos);
+                }else{
+                    var retNodes = clearAndSet(info,setVal.cloneNode());
+                    textSearch = nodeTextSearch();
+                    allNodes.splice(actualPosition - 1,0,...retNodes);
+                    allNodes =allNodes.filter(val =>val.isConnected);
+                    actualPosition+= 1 - (info.start.node != info.end.node ? 2 : 0);
+                }
+            }
+
+        }
     }
     function clearAndSet(info:locationResults,insert:Node){
         if(info.start.node === info.end.node){
-            opSameStartAndEnd();
+            return opSameStartAndEnd();
         }else{
-            rebuildStartAndEndNodes();
+            return rebuildStartAndEndNodes();
         }
         function opSameStartAndEnd(){
             const node = info.start.node;
@@ -267,11 +297,12 @@ function replace(elem:Node, searchValue:string | RegExp,replaceValue:string | No
             if(info.start.localPos === 0 && info.end.localPos === TOT_LENGTH){
                 replaceBefore(node);
                 removeNode(node);
+                return [insert];
             }else{
-                rebuildStartAndEndNodes();
+                return rebuildStartAndEndNodes();
             }
         }
-        function rebuildStartAndEndNodes(){
+        function rebuildStartAndEndNodes():Node[]{
             var nodeBefore =splitBefore(info.start.node,info.start.localPos);
             var nextNode =splitAfter(info.end.node,info.end.localPos);
             if(nodeBefore){
@@ -286,6 +317,17 @@ function replace(elem:Node, searchValue:string | RegExp,replaceValue:string | No
                 removeNode(rmNode);
             }
             removeNode(info.start.node);
+            var ret = [];
+            if(nodeBefore){
+                ret.push(nodeBefore);
+            }
+            ret.push(insert);
+            if(nextNode.textContent != ""){
+                ret.push(nextNode);
+            }else{
+                removeNode(nextNode);
+            }
+            return ret;
         }
         function splitAfter(node:Node,endLocalPositionReplace:number){
             if(endLocalPositionReplace === 0){
@@ -308,13 +350,6 @@ function replace(elem:Node, searchValue:string | RegExp,replaceValue:string | No
         function removeNode(node:Node){
             node.parentElement.removeChild(node);
         };
-    }
-    function put(nodeToPut:Node,putIt:Node | string){
-        if(typeof putIt == "string"){
-            nodeToPut.textContent += putIt;
-        }else{
-            nodeToPut.parentElement.insertBefore(putIt,nodeToPut.nextSibling);
-        }
     }
 }
 /**
