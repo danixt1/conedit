@@ -4,7 +4,7 @@ const MAIN_CONTENT_ID = "content";
 var assert = chai.assert;
 var $cont = $("#"+MAIN_CONTENT_ID);
 describe("[Internal]elemFuncs.js",()=>{
-    afterEach(()=>{
+    beforeEach(()=>{
         $cont.html("");
     })
     it("getCaretPosition()",async ()=>{
@@ -171,20 +171,23 @@ describe("[Internal]elemFuncs.js",()=>{
             $cont.html(TEXT_TO_CHANGE);
             replace(document.getElementById("content"),TEXT_TO_CHANGE,CHANGE_TO);
             var value =  document.getElementById("content").innerHTML;
-            assert.equal(value,CHANGE_TO,`Expected text is ${CHANGE_TO} but returned ${value}`);
+            assert.equal(value,CHANGE_TO);
         });
-        it("NODES:[1,1] SEARCH:Regexp(nonGlobal) PUT:string",async ()=>{
+        it("NODES:[1,1] SEARCH:string PUT:string DESC:not the entire node",async ()=>{
             const TEXT_TO_CHANGE = "simple text";
-            const MATCH_REGEX = /text/;
-            const CHANGE_TO = "string";
-
-            const EXPECTED = TEXT_TO_CHANGE.replace(MATCH_REGEX,CHANGE_TO);
-
-            $cont.html(TEXT_TO_CHANGE);
-
-            replace(document.getElementById("content"),new RegExp(MATCH_REGEX),CHANGE_TO);
-            var value = document.getElementById("content").innerHTML;
-            assert.equal(value,EXPECTED);
+            const CHANGE_TO = "other text";
+            $cont.html(TEXT_TO_CHANGE+" and that");
+            replace(document.getElementById("content"),TEXT_TO_CHANGE,CHANGE_TO);
+            var value =  document.getElementById("content").innerHTML;
+            assert.equal(value,CHANGE_TO+" and that");
+        });
+        it("NODES:[1,1] SEARCH:string PUT:string DESC:start in the middle of node",async ()=>{
+            const TEXT_TO_CHANGE = "simple text";
+            const CHANGE_TO = "other text";
+            $cont.html("from this "+TEXT_TO_CHANGE + " and that");
+            replace(document.getElementById("content"),TEXT_TO_CHANGE,CHANGE_TO);
+            var value =  document.getElementById("content").innerHTML;
+            assert.equal(value,"from this " +CHANGE_TO + " and that");
         });
         it("NODES:[2,3] SEARCH:string PUT:string",async ()=>{
             const TEXT_TO_CHANGE = "start <b>end here <b> and continue";
@@ -197,6 +200,48 @@ describe("[Internal]elemFuncs.js",()=>{
             var result =  document.getElementById("content").innerText;
             assert.equal(result,EXPECTED);
         });
+        it("NODES:[3,4] SEARCH:string PUT:string",()=>{
+            const TEXT_TO_CHANGE = "it start <b>and end </b>in another node<span> continue </span>";
+            const MATCH_TEXT = "start and end in another node";
+            const CHANGE_TO = "test";
+            const EXPECTED = "it test continue";
+
+            $cont.html(TEXT_TO_CHANGE);
+            replace(document.getElementById("content"),MATCH_TEXT,CHANGE_TO);
+            var result =  document.getElementById("content").innerText;
+            assert.equal(result,EXPECTED);
+        });
+        it("NODES:[1,1] SEARCH:Regexp(nonGlobal) PUT:string",async ()=>{
+            const TEXT_TO_CHANGE = "simple text";
+            const MATCH_REGEX = /text/;
+            const CHANGE_TO = "string";
+
+            const EXPECTED = TEXT_TO_CHANGE.replace(MATCH_REGEX,CHANGE_TO);
+
+            $cont.html(TEXT_TO_CHANGE);
+
+            replace(document.getElementById("content"),MATCH_REGEX,CHANGE_TO);
+            var value = document.getElementById("content").innerHTML;
+            assert.strictEqual(value,EXPECTED);
+        })
+        it("NODES:[1,1] SEARCH:Regexp(Global) PUT:string",()=>{
+            const TEXT_TO_CHANGE = "210 getthis 12 this";
+            const MATCH_REGEX = /([A-Z]|[a-z])+/g;
+            const CHANGE_TO = "string";
+            $cont.html(TEXT_TO_CHANGE);
+            const expected = $cont.text().replace(MATCH_REGEX,CHANGE_TO);
+            replace($cont.get(0),MATCH_REGEX,CHANGE_TO);
+            assert.strictEqual($cont.text(),expected);
+        })
+        it("NODES:[3,3] SEARCH:Regexp(Global) PUT:string",()=>{
+            const TEXT_TO_CHANGE = "210 get<span>this</span> 12 this";
+            const MATCH_REGEX = /([A-Z]|[a-z])+/g;
+            const CHANGE_TO = "string";
+            $cont.html(TEXT_TO_CHANGE);
+            const expected = $cont.text().replace(MATCH_REGEX,CHANGE_TO);
+            replace($cont.get(0),MATCH_REGEX,CHANGE_TO);
+            assert.strictEqual($cont.text(),expected);
+        })
     })
     describe("moveInEveryNode()",function(){
         var textArr = ["Test if"," the order"," moved is valid ","to text"];

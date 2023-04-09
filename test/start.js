@@ -9,7 +9,7 @@ import { exec } from "child_process";
 const MATCH_SPACES_IN_NOT_QUOTATIONS = /((?<='[^']+'|"[^"]+")|(?<!".+|'.+))\s/;
 const TEXT_IN_QUOTATION_MARKS = /"(-{1,2}\w+=(?:\\"|[^"])+)"|'(-{1,2}\w+=(?:[^']|\\')+)'|(-{1,2}\w+=)"((?:\\"|[^"])+)"|(-{1,2}\w+=)'((?:\\'|[^'])+)'/;
 var app = express();
-/**@type {"default"|"waitSucess"|"waitFinish"} */
+/**@type {"default"|"waitSuccess"|"waitFinish"} */
 var mode = "default";
 var headless = true;
 var returnTestResult = true;
@@ -53,14 +53,14 @@ async function start(){
             }
             if(opt('mode','m','Define the mode of execution:\n\t'+
             'waitfinish: wait for click of finish button or get sended to /finish\n\t'+
-            'waitSucess: does not end the test while passing all tests')){
+            'waitSuccess: does not end the test while passing all tests')){
                 var value = value.toLowerCase()
                 switch(value){
                     case "waitfinish":
                         mode = "waitFinish";
                         break;
-                    case "waitsucess":
-                        mode = "waitSucess";
+                    case "waitsuccess":
+                        mode = "waitSuccess";
                         break;
                     default:
                         throw new Error("Invalid mode");
@@ -142,7 +142,7 @@ function startServer(){
                 var test_info =data.data;
                 if(data.status === "ok"){
                     const failures = test_info.stats.failures;
-                    if(mode === "waitSucess" && failures != 0){
+                    if(mode === "waitSuccess" && failures != 0){
                         console.log(`[SERVER] Have ${failures} failures, waiting for success`);
                     }else{
                         makeSuite(test_info.suite);
@@ -154,14 +154,14 @@ function startServer(){
                     }
                 }else{
                     console.error(data.error);
-                    if(mode != "waitSucess" && mode != "waitFinish")
+                    if(mode != "waitSuccess" && mode != "waitFinish")
                         setImmediate(processFinish);
                 }
             }
             res.status(200).end();
         })
         server = app.listen(port,()=>{
-            console.log("[SERVER] Server started! url:htpp://localhost:"+port+"/index.html");
+            console.log("[SERVER] Server started! url: http://localhost:"+port+"/index.html");
             res();
         });
     })
