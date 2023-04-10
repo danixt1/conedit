@@ -275,7 +275,7 @@ function replace(elem:Node, searchValue:string | RegExp,replaceValue:string | No
                     actualPosition ++;
                     textSearch.add(nodeFromThisPos);
                 }else{
-                    var retNodes = clearAndSet(info,setVal.cloneNode());
+                    var retNodes = clearAndSet(info,setVal.cloneNode(true));
                     textSearch = nodeTextSearch();
                     allNodes.splice(actualPosition - 1,0,...retNodes);
                     allNodes =allNodes.filter(val =>val.isConnected);
