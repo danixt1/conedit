@@ -194,10 +194,11 @@ describe("[Internal]elemFuncs.js",()=>{
             const REPLACE = "text";
             const ELEM = document.createElement("div");
             ELEM.innerText = "added";
+            const EXPECTED = ORIGINAL_TEXT.replace(REPLACE,ELEM.innerText);
             $cont.html(ORIGINAL_TEXT);
             replace(document.getElementById("content"),REPLACE,ELEM);
-            var value =  document.getElementById("content").innerText;
-            assert.equal(value,ORIGINAL_TEXT.replace(REPLACE,ELEM.innerText));
+            var value =  $cont.text();
+            assert.equal(value,EXPECTED);
         });
         it("NODES:[1,1] SEARCH:string PUT:string DESC:not the entire node",async ()=>{
             const TEXT_TO_CHANGE = "simple text";
@@ -260,7 +261,7 @@ describe("[Internal]elemFuncs.js",()=>{
             $cont.html(TEXT_TO_CHANGE);
 
             replace(document.getElementById("content"),MATCH_REGEX,CHANGE_TO);
-            var value = document.getElementById("content").innerHTML;
+            var value = $cont.text();
             assert.strictEqual(value,EXPECTED);
         })
         it("NODES:[1,1] SEARCH:Regexp(Global) PUT:string",()=>{
