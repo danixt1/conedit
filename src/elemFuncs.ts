@@ -279,7 +279,8 @@ function replace(elem:Node, searchValue:string | RegExp,replaceValue:string | No
                     textSearch = nodeTextSearch();
                     allNodes.splice(actualPosition - 1,0,...retNodes);
                     allNodes =allNodes.filter(val =>val.isConnected);
-                    actualPosition+= 1 - (info.start.node != info.end.node ? 2 : 0);
+                    var backPos = (info.start.node != info.end.node ? 2 : 0) + info.elems.length
+                    actualPosition+= 1 - backPos;
                 }
             }
 
