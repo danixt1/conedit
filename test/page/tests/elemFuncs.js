@@ -140,16 +140,32 @@ describe("[Internal]elemFuncs.js",()=>{
             const endSub = result.index_end + PART0.length;
             assert.equal(SEARCH_TEXT, (PART0 + PART1).substring(startSub,endSub));
         });
+        it("NODES:[1,1] SEARCH:regexp(nonGlobal)",function(){
+            const INNER_HTML = "512 get";
+            const regex = /([A-Z]|[a-z])+/;
+            $cont.html(INNER_HTML);
+            var textSearch = nodeTextSearch();
+            const {addNodes}= nodeTextSearchFactory(textSearch);
+            addNodes(MAIN_CONTENT_ID);
+            var pos =textSearch.location(regex);
+            if(!pos){
+                throw new Error("Value not found");
+            }
+            var result = {
+                index_start:pos.start.localPos,
+                index_end:pos.end.localPos
+            }
+            assert.deepEqual(result,{
+                index_start:4,
+                index_end:7
+            })
+        });
         it("NODES:[2,4] SEARCH:regexp(nonGlobal)",function (){
             //In this test the nodeTextSearch need to encounter the 2 span valids to REGEX_INPUT
             var pre = ["512 12","GET_THIS"];
             const PRE_LENGTH = pre.reduce((p,c)=>p.length+c.length);
             const{htmlText:HTML_STRING,text:ORIGINAL_TEXT,ids }= genSpanToStrings(...pre,"_PART"," 241");
             const REGEX_INPUT = /([A-Z]+_*)+/;
-            if("512 12 GET_THIS_PART 241".match(REGEX_INPUT)?.[0] !== "GET_THIS_PART"){
-                this.test.title = "[INTERNAL FAILURE] " +this.test.title;
-                throw new Error("invalid regex in test");
-            }
             const EXPECTED = ORIGINAL_TEXT.match(REGEX_INPUT)[0];
             $cont.html(HTML_STRING);
             var textSearch = nodeTextSearch();
@@ -235,6 +251,15 @@ describe("[Internal]elemFuncs.js",()=>{
         })
         it("NODES:[3,3] SEARCH:Regexp(Global) PUT:string",()=>{
             const TEXT_TO_CHANGE = "210 get<span>this</span> 12 this";
+            const MATCH_REGEX = /([A-Z]|[a-z])+/g;
+            const CHANGE_TO = "string";
+            $cont.html(TEXT_TO_CHANGE);
+            const expected = $cont.text().replace(MATCH_REGEX,CHANGE_TO);
+            replace($cont.get(0),MATCH_REGEX,CHANGE_TO);
+            assert.strictEqual($cont.text(),expected);
+        })
+        it("NODES:[5,5] SEARCH:Regexp(Global) PUT:string DESC:have one replace distributed in 3 elements",()=>{
+            const TEXT_TO_CHANGE = "210 get<span>this</span>all<b>ra</b> 9 this";
             const MATCH_REGEX = /([A-Z]|[a-z])+/g;
             const CHANGE_TO = "string";
             $cont.html(TEXT_TO_CHANGE);

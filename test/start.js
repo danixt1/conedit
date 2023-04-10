@@ -135,6 +135,7 @@ function startServer(){
         })
         app.post("/info",(req,res)=>{
             console.log("[SERVER] Receiving data from frontend");
+            res.status(200);
             var data = req.body;
             if(!data){
                 console.error("[SERVER] Invalid data returned");
@@ -144,6 +145,8 @@ function startServer(){
                     const failures = test_info.stats.failures;
                     if(mode === "waitSuccess" && failures != 0){
                         console.log(`[SERVER] Have ${failures} failures, waiting for success`);
+                        res.end();
+                        return;
                     }else{
                         makeSuite(test_info.suite);
                         if(mode !== "waitFinish"){
