@@ -189,6 +189,16 @@ describe("[Internal]elemFuncs.js",()=>{
             var value =  document.getElementById("content").innerHTML;
             assert.equal(value,CHANGE_TO);
         });
+        it("NODES:[1,1] SEARCH:string PUT:element",async ()=>{
+            const ORIGINAL_TEXT = "simple text";
+            const REPLACE = "text";
+            const ELEM = document.createElement("div");
+            ELEM.innerText = "added";
+            $cont.html(ORIGINAL_TEXT);
+            replace(document.getElementById("content"),REPLACE,ELEM);
+            var value =  document.getElementById("content").innerText;
+            assert.equal(value,ORIGINAL_TEXT.replace(REPLACE,ELEM.innerText));
+        });
         it("NODES:[1,1] SEARCH:string PUT:string DESC:not the entire node",async ()=>{
             const TEXT_TO_CHANGE = "simple text";
             const CHANGE_TO = "other text";
@@ -240,12 +250,35 @@ describe("[Internal]elemFuncs.js",()=>{
             var value = document.getElementById("content").innerHTML;
             assert.strictEqual(value,EXPECTED);
         })
+        it("NODES:[1,1] SEARCH:Regexp(nonGlobal) PUT:element",async ()=>{
+            const TEXT_TO_CHANGE = "simple text";
+            const MATCH_REGEX = /text/;
+            const CHANGE_TO = document.createElement("div");
+            CHANGE_TO.innerText = "string";
+            const EXPECTED = TEXT_TO_CHANGE.replace(MATCH_REGEX,CHANGE_TO.innerText);
+
+            $cont.html(TEXT_TO_CHANGE);
+
+            replace(document.getElementById("content"),MATCH_REGEX,CHANGE_TO);
+            var value = document.getElementById("content").innerHTML;
+            assert.strictEqual(value,EXPECTED);
+        })
         it("NODES:[1,1] SEARCH:Regexp(Global) PUT:string",()=>{
             const TEXT_TO_CHANGE = "210 getthis 12 this";
             const MATCH_REGEX = /([A-Z]|[a-z])+/g;
             const CHANGE_TO = "string";
             $cont.html(TEXT_TO_CHANGE);
             const expected = $cont.text().replace(MATCH_REGEX,CHANGE_TO);
+            replace($cont.get(0),MATCH_REGEX,CHANGE_TO);
+            assert.strictEqual($cont.text(),expected);
+        })
+        it("NODES:[3,3] SEARCH:Regexp(Global) PUT:element",()=>{
+            const TEXT_TO_CHANGE = "210 get<span>this</span> 12 this";
+            const MATCH_REGEX = /([A-Z]|[a-z])+/g;
+            const CHANGE_TO = document.createElement("div");
+            CHANGE_TO.innerText = "string";
+            $cont.html(TEXT_TO_CHANGE);
+            const expected = $cont.text().replace(MATCH_REGEX,CHANGE_TO.innerText);
             replace($cont.get(0),MATCH_REGEX,CHANGE_TO);
             assert.strictEqual($cont.text(),expected);
         })
