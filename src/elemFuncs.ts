@@ -4,6 +4,17 @@ interface DataPosition{
     localPosition:number,
     index:number
 }
+interface NodePosition{
+    node: Node
+    localPos: number
+    startIn: number
+    index: number
+}
+interface locationResults{
+    start: NodePosition;
+    end: NodePosition;
+    elems: Node[];
+}
 /**
  * Get informations from what is in the position
  */
@@ -235,65 +246,111 @@ function setCaret(elem:Node,pos:number) {
     };
 }
 function replace(elem:Node, searchValue:string | RegExp,replaceValue:string | Node,ops?){
-    if(typeof searchValue === "string" || searchValue instanceof RegExp)
-        textReplacing(searchValue);
-    function textReplacing(text:string | RegExp){
-        console.log("text in elem: "+text);
-        const position = elem.textContent.search(text);
-        var fullPosition:number = 0;
-        var fullText:string = "";
-        var nodes:Node[] = [];
-        if(position == -1)
-            return;
-        moveInEveryNode(elem,actualNode =>{
-            var actualText = actualNode.textContent;
-            fullPosition+=actualText.length;
-            if(fullPosition >= position){
-                fullText+=actualText;
-                nodes.push(actualNode);
-                var isInFragment = actualText.search(text) != -1;
-                var isInFullText = fullText.search(text) != -1;
-                var isInActualNode = isInFragment && (!isInFullText || fullText === actualText);
-                if(isInActualNode){
-                    var replaceText =typeof text === "string" ? text : actualText.match(text)[0];
-                    if(typeof replaceValue === "string")
-                        actualNode.textContent = actualText.replace(replaceText,replaceValue);
-                    else{
-                        var parent =actualNode.parentNode;
-                        parent.insertBefore(replaceValue,actualNode);
-                        parent.removeChild(actualNode);
-                    };
-                    return false;
-                }else{
-                    if(isInFullText){
-                        var multiNodeSearch = nodeTextSearch();
-                        for(const node of nodes){
-                            multiNodeSearch.add(node);
-                        };
-                        var result = multiNodeSearch.location(text);
-                        if(!result){
-                            return false;
-                        }
-                        var startNode = result.start.node;
-                        var endNode = result.end.node;
-                        for(const elem of result.elems){
-                            elem.parentElement.removeChild(elem);
-                        };
-                        startNode.textContent = startNode.textContent.substring(0,result.start.localPos);
-                        endNode.textContent = endNode.textContent.substring(result.end.localPos);
-                        put(startNode,replaceValue);
-                        return false;
-                    }
-                }
-            };
-        });
-    }
-    function put(nodeToPut:Node,putIt:Node | string){
-        if(typeof putIt == "string"){
-            nodeToPut.textContent += putIt;
-        }else{
-            nodeToPut.parentElement.insertBefore(putIt,nodeToPut.nextSibling);
+    var textSearch = nodeTextSearch();
+    var setVal = typeof replaceValue === "string" ?document.createTextNode(replaceValue) : replaceValue;
+    var isGlobal = typeof searchValue === "object" ? searchValue.global : false;
+    if(!isGlobal){
+        moveInEveryNode(elem,actual =>{textSearch.add(actual)});
+        var result = textSearch.location(searchValue);
+        if(result){
+            clearAndSet(result,setVal);
         }
+    }else{
+        var regex =<RegExp>searchValue;
+        var actualPosition = 0;
+        var allNodes:Node[] = [];
+        moveInEveryNode(elem,actual =>{allNodes.push(actual)});
+        while(actualPosition <= allNodes.length){
+            const nodeFromThisPos = allNodes[actualPosition];
+            var info = textSearch.location(regex);
+            if(!info){
+                if(!nodeFromThisPos){
+                    break;
+                }
+                actualPosition++;
+                textSearch.add(nodeFromThisPos);
+            }else{
+                //keeps adding nodes to make sure the regex is found completely
+                if(info.end.node === allNodes[actualPosition - 1] && nodeFromThisPos){
+                    actualPosition ++;
+                    textSearch.add(nodeFromThisPos);
+                }else{
+                    var retNodes = clearAndSet(info,setVal.cloneNode(true));
+                    textSearch = nodeTextSearch();
+                    allNodes.splice(actualPosition - 1,0,...retNodes);
+                    allNodes =allNodes.filter(val =>val.isConnected);
+                    var backPos = (info.start.node != info.end.node ? 2 : 0) + info.elems.length
+                    actualPosition+= 1 - backPos;
+                }
+            }
+
+        }
+    }
+    function clearAndSet(info:locationResults,insert:Node){
+        if(info.start.node === info.end.node){
+            return opSameStartAndEnd();
+        }else{
+            return rebuildStartAndEndNodes();
+        }
+        function opSameStartAndEnd(){
+            const node = info.start.node;
+            const TOT_LENGTH = node.textContent.length;
+            if(info.start.localPos === 0 && info.end.localPos === TOT_LENGTH){
+                replaceBefore(node);
+                removeNode(node);
+                return [insert];
+            }else{
+                return rebuildStartAndEndNodes();
+            }
+        }
+        function rebuildStartAndEndNodes():Node[]{
+            var nodeBefore =splitBefore(info.start.node,info.start.localPos);
+            var nextNode =splitAfter(info.end.node,info.end.localPos);
+            if(nodeBefore){
+                info.start.node.parentElement.insertBefore(nodeBefore,info.start.node);
+            }
+            info.end.node.parentElement.insertBefore(nextNode,info.end.node);
+            replaceBefore(nextNode);
+            if(info.start.node != info.end.node){
+                removeNode(info.end.node);
+            };
+            for(const rmNode of info.elems){
+                removeNode(rmNode);
+            }
+            removeNode(info.start.node);
+            var ret = [];
+            if(nodeBefore){
+                ret.push(nodeBefore);
+            }
+            ret.push(insert);
+            if(nextNode.textContent != ""){
+                ret.push(nextNode);
+            }else{
+                removeNode(nextNode);
+            }
+            return ret;
+        }
+        function splitAfter(node:Node,endLocalPositionReplace:number){
+            if(endLocalPositionReplace === 0){
+                return node.cloneNode();
+            }else{
+                var putInNewNode = node.textContent.substring(endLocalPositionReplace);
+                return document.createTextNode(putInNewNode);
+            }
+        }
+        function splitBefore(node:Node,startLocalPositionReplace:number){
+            if(startLocalPositionReplace === 0){
+                return null;
+            };
+            var text = node.textContent;
+            return document.createTextNode(text.substring(0,startLocalPositionReplace));
+        }
+        function replaceBefore(node:Node){
+            node.parentElement.insertBefore(insert,node);
+        }
+        function removeNode(node:Node){
+            node.parentElement.removeChild(node);
+        };
     }
 }
 /**
@@ -321,13 +378,13 @@ function nodeTextSearch(){
         /**
          * Get detailed info from the search
          */
-        location(searchFor:string | RegExp){
+        location(searchFor:string | RegExp):locationResults | null{
             var startPos =typeof searchFor == "string"? fullText.indexOf(searchFor) : fullText.search(searchFor);
             if(startPos === -1)
-                return false;
+                return null;
             var lengthMatchedText = typeof searchFor === "string" ? searchFor.length : fullText.match(searchFor)[0].length;
-            var start = position(startPos);
-            var end = position(startPos+ lengthMatchedText);
+            var start:NodePosition = position(startPos);
+            var end:NodePosition = position(startPos+ lengthMatchedText);
             runPosition(start,compareMode(">"));
             runPosition(end,compareMode(">="));//fix getting last position
             var sendElems:Node[] = [];
