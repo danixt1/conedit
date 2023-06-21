@@ -1,2 +1,3 @@
 import contentEditable from "./contentEditable.js"
-export default contentEditable;
+const ContentEditable = contentEditable;
+export default ContentEditable;

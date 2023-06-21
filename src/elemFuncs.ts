@@ -210,11 +210,10 @@ function getLocalPosition(ref:Node,data:DataPosition){
 /**
  * Pass Every node
  */
-function setCaret(elem:Node,pos:number) {
-    var el = elem;
+function setCaret(parentNode:Node,pos:number) {
     var actualLength = 0;
     var relativePositionToElem = pos;
-    var relativeChildFromPosition =getChildInPosition(el);
+    var relativeChildFromPosition =getChildInPosition(parentNode);
     setSelection(relativeChildFromPosition,relativePositionToElem);
     function getChildInPosition(elemToCont){
         if(elemToCont.childNodes.length == 0){

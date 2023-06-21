@@ -1,4 +1,4 @@
-import {getCaretPosition,setCaret,setCaretToEnd,getDataFromPosition,splitElem,getLocalPath,getLocalPosition,replace} from "./elemFuncs.js"
+import {getCaretPosition,setCaret,setCaretToEnd,getDataFromPosition,splitElem,getLocalPosition,replace} from "./elemFuncs.js"
 
 interface ContentEditableOps {
 };
@@ -48,8 +48,12 @@ class contentEditable{
     get caretPosition(){
         return getCaretPosition(this.content);
     }
-    set caretPosition(position:number){
-        setCaret(this.content,position);
+    set caretPosition(position:number | null){
+        if(position === null){
+            setCaretToEnd(this.content);
+        }else{
+            setCaret(this.content,position);
+        }
     }
     addEventListener(event:keyof HTMLElementEventMap,listener:EventListenerOrEventListenerObject,options?:boolean | AddEventListenerOptions){
         var execFunc = typeof listener === "function" ? listener : listener.handleEvent;

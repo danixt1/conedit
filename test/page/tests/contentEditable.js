@@ -12,7 +12,7 @@ describe("contentEditable.js",function(){
     describe("[instance].append()",()=>{
         const ELEM_TEXT = "any";
         const TEXT_ELEMS_TO_ADD = [" other"," more"];
-        it("Cursor location not changed",()=>{
+        it("Cursor not changing adding new items after cursor position",()=>{
             $cont.html(ELEM_TEXT);
             content.caretPosition = 2;
             content.append(...TEXT_ELEMS_TO_ADD.map(e=>{
@@ -23,6 +23,16 @@ describe("contentEditable.js",function(){
             var result = content.caretPosition;
             assert.strictEqual(result,2);
         });
+        it("Cursor change position to end",()=>{
+            content.caretPosition = null;
+            let actCaret = content.caretPosition;
+            content.append(...TEXT_ELEMS_TO_ADD.map(e =>{
+                var b = document.createElement('b');
+                b.innerText = e;
+                return b;
+            }));
+            assert.isTrue(actCaret != content.caretPosition);
+        })
         it("add elems",()=>{
             $cont.html(ELEM_TEXT);
             content.caretPosition = 1;
