@@ -1,8 +1,8 @@
 import {getCaretPosition,setCaret,setCaretToEnd,getDataFromPosition,splitElem,getLocalPosition,replace} from "./elemFuncs.js"
-
+//Add the options from the content
 interface ContentEditableOps {
 };
-class contentEditable{
+class contentEditable implements Pick<HTMLElement,'addEventListener'>{
     private content:HTMLElement
     private ops:ContentEditableOps
 
@@ -11,6 +11,16 @@ class contentEditable{
             throw "Passed Element not is contentEditable";
         this.content = content;
         this.ops = ops;
+    }
+    addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+    addEventListener(type: string, listener: any, options?: unknown): void {
+        var execFunc = typeof listener === "function" ? listener : listener.handleEvent;
+        var newfunc = (event)=>{
+                setTimeout(execFunc,0,event);
+        };
+        listener = typeof listener === "function" ? newfunc : {handleEvent:newfunc};
+        this.content.addEventListener(type,listener,options);
     }
     append(...elems:Node[]){
         let lastPosition = this.caretPosition;
@@ -55,16 +65,11 @@ class contentEditable{
             setCaret(this.content,position);
         }
     }
-    addEventListener(event:keyof HTMLElementEventMap,listener:EventListenerOrEventListenerObject,options?:boolean | AddEventListenerOptions){
-        var execFunc = typeof listener === "function" ? listener : listener.handleEvent;
-        var newfunc = (event)=>{
-                setTimeout(execFunc,0,event);
-        };
-        listener = typeof listener === "function" ? newfunc : {handleEvent:newfunc};
-        this.content.addEventListener(event,listener,options);
+    on(event:string,listener:EventListenerOrEventListenerObject,options?:boolean | AddEventListenerOptions){
+        this.addEventListener(event,listener,options);
     }
     removeEventListener(type: keyof HTMLElementEventMap,listener:EventListenerOrEventListenerObject,options?:boolean | AddEventListenerOptions){
-        this.content.removeEventListener(type,listener,options)
+        this.content.removeEventListener(type,listener,options);
     }
 }
 declare global{
